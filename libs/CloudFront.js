@@ -57,7 +57,9 @@ class CloudFront extends ServerlessBase {
                 // ディストリビューションを検索
                 let domainInfo = await this._findDistribution(this.domain)
                 // DNSレコードの削除
-                await this._deleteDNSRecord(this.hostedZoneId, this.domain, domainInfo.domain)
+                await this._deleteDNSRecord(this.hostedZoneId, this.domain, domainInfo.domain).catch(err => {
+                    this.error(err)
+                })
                 // ディストリビューション削除
                 await this._deleteDistribution(domainInfo.id)
                 // 後処理
@@ -289,18 +291,58 @@ class CloudFront extends ServerlessBase {
 
     /**
      * CloudFrontディストリビューションの生成
-     * @param String id
+     * @param Object dist
      * @returns Promise<String> id
      */
     async _deleteDistribution (id) {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.cloudfront.deleteDistribution({
+                let distribution = await this.cloudfront.getDistribution({
                     Id: id
-                })
-                resolve(id)
+                }).promise()
+                if (distribution.Distribution.DistributionConfig.Enabled) {
+                    let settings = {
+                        Id: distribution.Distribution.Id,
+                        IfMatch: distribution.ETag,
+                        DistributionConfig: distribution.Distribution.DistributionConfig
+                    }
+                    settings.DistributionConfig.Enabled = false
+                    this.info(`[CloudFront::deleteDistribution] disable distribution`)
+                    await this.cloudfront.updateDistribution(settings).promise()
+                }
+                this.info(`[CloudFront::deleteDistribution] disabling distribution`)
+                try {
+                    await this.__deleteDistributionWhenDisabled(id)
+                    this.info(`[CloudFront::deleteDistribution] deleted`)
+                    resolve(id)
+                } catch (err) {
+                    reject(err)
+                }
             } catch (err) {
                 reject(`[CloudFront::deleteDistribution] Error: ${err.message}`)
+            }
+        })
+    }
+    async __deleteDistributionWhenDisabled (id) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let distribution = await this.cloudfront.getDistribution({
+                    Id: id
+                }).promise()
+                this.info(`disabling... ${distribution.Distribution.Status}`)
+                if (!distribution.Distribution.DistributionConfig.Enabled && distribution.Distribution.Status == 'Deployed') {
+                    await this.cloudfront.deleteDistribution({
+                        Id: distribution.Distribution.Id,
+                        IfMatch: distribution.ETag
+                    }).promise()
+                    resolve(id)
+                } else {
+                    setTimeout(async () => {
+                        await this.__deleteDistributionWhenDisabled(id)
+                    }, 30000)
+                }
+            } catch (err) {
+                reject(`[CloudFront::deleteDistributionWhenDisabled] Error: ${err}`)
             }
         })
     }
@@ -315,20 +357,25 @@ class CloudFront extends ServerlessBase {
         return new Promise(async (resolve, reject) => {
             try {
                 let distributions = await this.cloudfront.listDistributions().promise()
-                for (let dist of distributions) {
+                for (let dist of distributions.DistributionList.Items) {
                     if (dist.Aliases.Quantity > 0) {
                         let alias = dist.Aliases.Items.find(item => item === domainName)
                         if (alias !== undefined) {
+                            // get detail
+                            let distribution = await this.cloudfront.getDistribution({
+                                Id: dist.Id
+                            }).promise()
                             return resolve({
-                                id: dist.Id,
-                                domain: dist.DomainName
+                                id: distribution.Distribution.Id,
+                                domain: distribution.Distribution.DomainName,
+                                etag: distribution.ETag
                             })
                         }
                     }
                 }
                 reject(`[CloudFront::findDistribution] Not found distribution for '${domainName}'`)
             } catch (err) {
-                reject(`[CloudFront::findDistribution] Cloud not get distribution`)
+                reject(`[CloudFront::findDistribution] Could not get distribution`)
             }
         })
     }
@@ -403,7 +450,7 @@ class CloudFront extends ServerlessBase {
                 }).promise()
                 resolve(domainName)
             } catch (err) {
-                reject(`[CloudFront::changeResourceRecordSet] Failed to create custom domain ${this.domain}`)
+                reject(`[CloudFront::changeResourceRecordSet] Failed to change record for domain ${this.domain}`)
             }
         })
     }
