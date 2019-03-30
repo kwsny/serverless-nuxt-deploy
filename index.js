@@ -23,7 +23,7 @@ class ServerlessNuxtDeploy extends ServerlessBase {
             },
             'cloudfront:remove': {
                 lifecycleEvents: [
-                    'deploy'
+                    'remove'
                 ]
             }
         }
