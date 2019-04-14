@@ -1,6 +1,6 @@
 {
   "name": "serverless-nuxt-deploy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serverless plugin for Nuxt deploy",
   "author": "Shinya Kawamura <shinya.kawamura@gmail.com>",
   "license": "MIT",

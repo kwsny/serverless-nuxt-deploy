@@ -120,7 +120,7 @@ class Storage extends ServerlessBase {
             // ディレクトリ同期
             let directories = []
             this.info(`[Storage::syncBucketContents] syncing directories`)
-            for (let setting of this.serverless.service.custom.nuxtDeploy.behaviors) {
+            for (let setting of this.serverless.service.custom.nuxtDeploy.sync) {
                 if (setting.type == 's3') {
                     this.info(`[Storage::syncBucketContents] => ${setting.path}`)
                     await this._syncDirectory(setting.localDir, setting.path).catch(err => {
@@ -163,7 +163,7 @@ class Storage extends ServerlessBase {
             // ディレクトリ削除
             let directories = []
             this.info(`[Storage::removeBucketContents] removing directories`)
-            for (let setting of this.serverless.service.custom.nuxtDeploy.behaviors) {
+            for (let setting of this.serverless.service.custom.nuxtDeploy.sync) {
                 if (setting.type == 's3') {
                     this.info(`[Storage::removeBucketContents] => ${setting.path}`)
                     await this._removeDirectory(setting.path).catch(err => {

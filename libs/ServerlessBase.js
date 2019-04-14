@@ -10,7 +10,6 @@ class ServerlessBase {
         this.stage = this.options.stage || this.serverless.service.provider.stage
         this.basename = `${this.serviceName}-${this.stage}`
         this.serviceBucketName = `${this.basename}`
-        this.domain = this.serverless.service.custom.nuxtDeploy.domain
     }
     title(text, color='green') {
         this.serverless.cli.consoleLog(chalk[color](text))
