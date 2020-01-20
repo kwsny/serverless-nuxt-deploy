@@ -32,7 +32,6 @@ class ServerlessNuxtDeploy extends ServerlessBase {
     initializeVariables() {
         // aws services
         const credentials = this.serverless.providers.aws.getCredentials()
-        this.info(credentials)
         // subclasses
         this.storage = new Storage(this.serverless, this.options, credentials)
     }

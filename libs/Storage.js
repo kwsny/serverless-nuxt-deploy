@@ -67,7 +67,12 @@ class Storage extends ServerlessBase {
         return new Promise(async (resolve, reject) => {
             try {
                 // APIGatewayデプロイ確認
-                this.restApiId = await this._getRestApiId()
+                const env = this.serverless.service.custom.environment[this.stage]
+                if (env && env.restApiId) {
+                    this.restApiId = env.restApiId
+                } else {
+                    this.restApiId = await this._getRestApiId()
+                }
                 // バケット名の設定
                 this.serviceBucketName = `${this.basename}-${this.restApiId}`
                 //
