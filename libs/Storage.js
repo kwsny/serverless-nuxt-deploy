@@ -68,8 +68,8 @@ class Storage extends ServerlessBase {
             try {
                 // APIGatewayデプロイ確認
                 const env = this.serverless.service.custom.environment[this.stage]
-                if (env && env.restApiId) {
-                    this.restApiId = env.restApiId
+                if (env && env.lambda && env.lambda.rest_api_id) {
+                    this.restApiId = env.lambda.rest_api_id
                 } else {
                     this.restApiId = await this._getRestApiId()
                 }
