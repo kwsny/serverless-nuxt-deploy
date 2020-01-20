@@ -93,8 +93,8 @@ class Storage extends ServerlessBase {
             let response
             try {
                 response = await this.cloudformation.describeStackResource({
-                    LogicalResourceId: 'ApiGatewayRestApi',
-                    StackName: stackName
+                    StackName: stackName,
+                    LogicalResourceId: 'ApiGatewayRestApi'
                 }).promise()
             } catch (err) {
                 return reject(`[Storage::getRestApiId] Could not find CloudFormation resources for ${this.serviceName}, stackName: ${stackName}`)
