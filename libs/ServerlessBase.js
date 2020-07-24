@@ -6,7 +6,7 @@ class ServerlessBase {
         // params
         this.serviceName = this.serverless.service.service
         this.servicePath = this.serverless.service.serverless.config.servicePath
-        this.region = this.serverless.service.provider.region
+        this.region = this.serverless.service.provider.region.replace(/\r\n/g, '')
         this.stage = this.options.stage || this.serverless.service.provider.stage
         this.basename = `${this.serviceName}-${this.stage}`
         this.serviceBucketName = `${this.basename}`
