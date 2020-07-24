@@ -219,7 +219,7 @@ class Storage extends ServerlessBase {
                 }
                 resolve(bucketName)
             } catch (err) {
-                reject(`[Storage::createBucketIfNotExist] Error: ${err.message}`)
+                reject(`[Storage::createBucketIfNotExist] Error: ${err.message} ${bucketName}`)
             }
         })
     }
